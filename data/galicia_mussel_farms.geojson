@@ -1,0 +1,137 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R\u00eda de Arousa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -8.95,
+              42.54
+            ],
+            [
+              -8.75,
+              42.54
+            ],
+            [
+              -8.75,
+              42.68
+            ],
+            [
+              -8.95,
+              42.68
+            ],
+            [
+              -8.95,
+              42.54
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R\u00eda de Vigo"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -8.82,
+              42.2
+            ],
+            [
+              -8.64,
+              42.2
+            ],
+            [
+              -8.64,
+              42.32
+            ],
+            [
+              -8.82,
+              42.32
+            ],
+            [
+              -8.82,
+              42.2
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R\u00eda de Pontevedra"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -8.85,
+              42.34
+            ],
+            [
+              -8.71,
+              42.34
+            ],
+            [
+              -8.71,
+              42.44
+            ],
+            [
+              -8.85,
+              42.44
+            ],
+            [
+              -8.85,
+              42.34
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R\u00eda de Muros e Noia"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -9.08,
+              42.72
+            ],
+            [
+              -8.85,
+              42.72
+            ],
+            [
+              -8.85,
+              42.87
+            ],
+            [
+              -9.08,
+              42.87
+            ],
+            [
+              -9.08,
+              42.72
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
