@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 import xarray as xr
 
@@ -93,32 +92,25 @@ col1, col2 = st.columns([1.2, 2])
 with col1:
     st.subheader(f"🗺️ Map Overview ({selected_time.date()})")
 
+    # Select variable
     if map_variable == "Temperature":
         var_data = ds.temperature.sel(time=selected_time, method="nearest")
         var_label = "Temperature (°C)"
-        var_col = "temperature"
-        color_scale = "thermal"
+        cmap = "inferno"
     else:
         var_data = ds.sea_level.sel(time=selected_time, method="nearest")
         var_label = "Sea Level (m)"
-        var_col = "sea_level"
-        color_scale = "ice"  # Or 'viridis', 'blues', etc.
+        cmap = "viridis"
 
-    df_map = var_data.to_dataframe().reset_index()
-
-    fig_map = px.density_mapbox(
-        df_map,
-        lat="lat",
-        lon="lon",
-        z=var_col,
-        radius=30,
-        center=dict(lat=59.5, lon=6.5),
-        zoom=4,
-        mapbox_style="carto-positron",
-        title=f"{var_label} Snapshot",
-        color_continuous_scale=color_scale,
-    )
-    st.plotly_chart(fig_map, use_container_width=True)
+    # Create pcolormesh plot
+    fig, ax = plt.subplots(figsize=(6, 5))
+    mesh = ax.pcolormesh(ds.lon, ds.lat, var_data.values, cmap=cmap, shading="auto")
+    cbar = plt.colorbar(mesh, ax=ax, label=var_label)
+    ax.set_title(f"{var_label} at {selected_time.date()}")
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    ax.set_aspect("auto")
+    st.pyplot(fig)
 
 
 # ---------- Time Series (col2) ----------
