@@ -86,7 +86,7 @@ else:
 
 
 # ---------- Layout ----------
-col1, col2 = st.columns([1.2, 2])
+col1, col2 = st.columns([1, 1])
 
 # ---------- Map View (col1) ----------
 with col1:
