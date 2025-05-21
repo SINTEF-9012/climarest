@@ -54,10 +54,10 @@ sea_thresh = st.sidebar.slider("Sea Level Threshold (m)", 0.0, 2.0, 1.0)
 
 # ---------- Select Locations ----------
 locations = {
-    "Site A": (58.0, 5.0),
-    "Site B": (59.0, 6.0),
-    "Site C": (60.0, 7.0),
-    "Site D": (61.0, 8.0),
+    "Ría de Arousa": (-8.85, 42.61002),
+    "Ría de Vigo": (-8.73, 42.26002),
+    "Ría de Pontevedra": (-8.78, 42.39001),
+    "Ría de Muros e Noia": (-8.96501, 42.79503),
 }
 
 # ---------- Alarm Evaluation ----------
