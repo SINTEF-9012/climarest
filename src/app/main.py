@@ -120,6 +120,21 @@ with col1:
     # Plot actual data
     mesh = ax.pcolormesh(ds.lon, ds.lat, var_data.values, cmap=cmap, shading="auto")
     cbar = plt.colorbar(mesh, ax=ax, label=var_label)
+
+    # Add site locations
+    for _, site in locations.items():
+        # print(row.centroid)
+        ax.plot(
+            site[0],
+            site[1],
+            marker="*",
+            color="black",
+            markersize=4**2,
+            transform=ccrs.PlateCarree(),
+        )
+        # ax.text(loc["lon"] + 0.5, loc["lat"] + 0.5, loc["name"],
+        #         transform=ccrs.PlateCarree(), fontsize=9, color='black')
+
     ax.set_title(f"{var_label} at {selected_time.date()}")
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
