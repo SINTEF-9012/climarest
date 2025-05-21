@@ -32,6 +32,18 @@ def load_data():
 
 ds = load_data()
 
+# ---------- Time Selection ----------
+st.sidebar.header("🕒 Time Control")
+time_options = pd.to_datetime(ds.time.values).to_pydatetime()
+selected_time = st.sidebar.slider(
+    "Select Time",
+    min_value=time_options[0],
+    max_value=time_options[-1],
+    value=time_options[0],
+    format="YYYY-MM-DD",
+)
+
+
 # ---------- User Thresholds ----------
 st.sidebar.header("🚨 Alarm Thresholds")
 temp_thresh = st.sidebar.slider("Temperature Threshold (°C)", 0.0, 20.0, 12.0)
@@ -50,11 +62,16 @@ col1, col2 = st.columns([1.2, 2])
 
 # ---------- Map View (col1) ----------
 with col1:
-    st.subheader("🗺️ Map Overview")
-    # Simple 2D temperature snapshot (latest timestep)
-    temp_latest = ds.temperature.isel(time=-1).to_dataframe().reset_index()
+    st.subheader(f"🗺️ Map Overview ({selected_time.date()})")
+    # Select temperature data for chosen time
+    temp_sel = (
+        ds.temperature.sel(time=selected_time, method="nearest")
+        .to_dataframe()
+        .reset_index()
+    )
+
     fig_map = px.density_mapbox(
-        temp_latest,
+        temp_sel,
         lat="lat",
         lon="lon",
         z="temperature",
@@ -62,7 +79,7 @@ with col1:
         center=dict(lat=59.5, lon=6.5),
         zoom=4,
         mapbox_style="carto-positron",
-        title="Surface Temperature Snapshot (Latest Time)",
+        title="Surface Temperature Snapshot",
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
