@@ -1,3 +1,5 @@
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -102,8 +104,20 @@ with col1:
         var_label = "Sea Level (m)"
         cmap = "viridis"
 
+    # Choose the projection
+    proj = ccrs.PlateCarree()
+
     # Create pcolormesh plot
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={"projection": proj})
+
+    # Add map features
+    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.BORDERS)
+    ax.add_feature(cfeature.LAND, facecolor="lightgray")
+    ax.add_feature(cfeature.OCEAN, facecolor="lightblue")
+    ax.gridlines(draw_labels=True)
+
+    # Plot actual data
     mesh = ax.pcolormesh(ds.lon, ds.lat, var_data.values, cmap=cmap, shading="auto")
     cbar = plt.colorbar(mesh, ax=ax, label=var_label)
     ax.set_title(f"{var_label} at {selected_time.date()}")
