@@ -43,6 +43,10 @@ selected_time = st.sidebar.slider(
     format="YYYY-MM-DD",
 )
 
+# Sidebar or within col1
+st.sidebar.header("🗺️ Map Settings")
+map_variable = st.sidebar.radio("Select Variable for Map", ["Temperature", "Sea Level"])
+
 
 # ---------- User Thresholds ----------
 st.sidebar.header("🚨 Alarm Thresholds")
@@ -57,38 +61,70 @@ locations = {
     "Site D": (61.0, 8.0),
 }
 
+# ---------- Alarm Evaluation ----------
+alarm_triggered = False
+alarm_messages = []
+
+for site, (lat, lon) in locations.items():
+    ts_temp = ds.temperature.sel(lat=lat, lon=lon, method="nearest").to_series()
+    ts_sea = ds.sea_level.sel(lat=lat, lon=lon, method="nearest").to_series()
+
+    if (ts_temp > temp_thresh).any():
+        alarm_triggered = True
+        alarm_messages.append(f"🚨 {site}: Temperature threshold exceeded")
+    if (ts_sea > sea_thresh).any():
+        alarm_triggered = True
+        alarm_messages.append(f"🌊 {site}: Sea level threshold exceeded")
+
+# ---------- Display Alarm Widget ----------
+st.subheader("🔔 Alarm Status")
+
+if alarm_triggered:
+    for msg in alarm_messages:
+        st.error(msg)
+else:
+    st.success("✅ All values within safe thresholds.")
+
+
 # ---------- Layout ----------
 col1, col2 = st.columns([1.2, 2])
 
 # ---------- Map View (col1) ----------
 with col1:
     st.subheader(f"🗺️ Map Overview ({selected_time.date()})")
-    # Select temperature data for chosen time
-    temp_sel = (
-        ds.temperature.sel(time=selected_time, method="nearest")
-        .to_dataframe()
-        .reset_index()
-    )
+
+    if map_variable == "Temperature":
+        var_data = ds.temperature.sel(time=selected_time, method="nearest")
+        var_label = "Temperature (°C)"
+        var_col = "temperature"
+        color_scale = "thermal"
+    else:
+        var_data = ds.sea_level.sel(time=selected_time, method="nearest")
+        var_label = "Sea Level (m)"
+        var_col = "sea_level"
+        color_scale = "ice"  # Or 'viridis', 'blues', etc.
+
+    df_map = var_data.to_dataframe().reset_index()
 
     fig_map = px.density_mapbox(
-        temp_sel,
+        df_map,
         lat="lat",
         lon="lon",
-        z="temperature",
+        z=var_col,
         radius=30,
         center=dict(lat=59.5, lon=6.5),
         zoom=4,
         mapbox_style="carto-positron",
-        title="Surface Temperature Snapshot",
+        title=f"{var_label} Snapshot",
+        color_continuous_scale=color_scale,
     )
     st.plotly_chart(fig_map, use_container_width=True)
+
 
 # ---------- Time Series (col2) ----------
 with col2:
     st.subheader("📈 Time Series for Key Locations")
     fig_ts, axs = plt.subplots(4, 1, figsize=(10, 12), sharex=True)
-
-    alarm_triggered = False
 
     for i, (site, (lat, lon)) in enumerate(locations.items()):
         ts_temp = ds.temperature.sel(lat=lat, lon=lon, method="nearest").to_series()
@@ -102,14 +138,4 @@ with col2:
         axs[i].legend(loc="upper right")
         axs[i].grid(True)
 
-        # Alarm check
-        if (ts_temp > temp_thresh).any() or (ts_sea > sea_thresh).any():
-            alarm_triggered = True
-
     st.pyplot(fig_ts)
-
-    # ---------- Alarm ----------
-    if alarm_triggered:
-        st.error("🚨 Alarm: One or more thresholds exceeded!")
-    else:
-        st.success("✅ All values within safe thresholds.")
