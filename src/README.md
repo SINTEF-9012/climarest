@@ -39,6 +39,26 @@ $ cd ./src
 $ streamlit run app/main.py --server.headless true
 ```
 
+## Running in Docker
+
+Build:
+
+```sh
+$ docker build --tag climarest-mussels .
+```
+
+Run:
+
+```sh
+$ docker run --interactive \
+    --env-file ./.env \
+    --tty \
+    --publish 14858:14858 \
+    climarest-mussels
+```
+
+Then point your browser to [http://localhost:1458](http://localhost:1458).
+
 ## Contact and Blame
 
 - Volker Hoffmann (volker.hoffmann@sintef.no)
