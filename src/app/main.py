@@ -147,7 +147,7 @@ dset = _load_ocean_data_for_map(map_bounds, tlo, thi)
 ########################################################################
 
 # ---------- Time Selection ----------
-st.sidebar.header("🕒 Time Control")
+st.sidebar.header("🕒 Time Control (Map Only)")
 time_options = pd.date_range(tlo, thi, freq="h").to_pydatetime()
 selected_time = st.sidebar.slider(
     "Select Time",
