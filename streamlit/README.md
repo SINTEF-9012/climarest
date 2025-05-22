@@ -44,12 +44,14 @@ $ streamlit run app/main.py --server.headless true
 Build:
 
 ```sh
+$ cd ./streamlit
 $ docker build --tag climarest-mussels .
 ```
 
 Run:
 
 ```sh
+$ cd ./streamlit
 $ docker run --interactive \
     --env-file ./.env \
     --tty \
