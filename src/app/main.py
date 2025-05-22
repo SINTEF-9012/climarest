@@ -3,6 +3,7 @@ import os
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import cmocean
 import copernicusmarine
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -225,11 +226,18 @@ with col1:
     if map_variable == "Temperature":
         var_data = dset.thetao.sel(time=selected_time, method="nearest")
         var_label = "Temperature (°C)"
-        cmap = "inferno"
+        cmap = cmocean.cm.thermal
+        vmin = None
+        vmax = None
     else:
         var_data = dset.zos.sel(time=selected_time, method="nearest")
         var_label = "Sea Surface Above Geoid (m)"
         cmap = "viridis"
+        vmin = None
+        vmax = None
+        # cmap = cmocean.cm.balance_r
+        # vmin = -1.0
+        # vmax = 1.0
 
     # Choose the projection
     proj = ccrs.PlateCarree()
@@ -246,7 +254,13 @@ with col1:
 
     # Plot actual data
     mesh = ax.pcolormesh(
-        dset.longitude, dset.latitude, var_data.values, cmap=cmap, shading="auto"
+        dset.longitude,
+        dset.latitude,
+        var_data.values,
+        cmap=cmap,
+        shading="auto",
+        vmin=vmin,
+        vmax=vmax,
     )
     cbar = plt.colorbar(mesh, ax=ax, label=var_label)
 
