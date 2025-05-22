@@ -4,6 +4,10 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## Data
+
+⚠️ There exists a file called `galicia_mussel_farms.geojson`. The repository has two copies of the file -- one in `../data` and one in `./streamlit/app`. This is because Docker cannot access a file outside its own build context. If you update the file, make sure it updates in both locations.
+
 ## Prerequisites
 
 ```sh
