@@ -17,7 +17,7 @@ You also need `.env` file with your API credentials for the [Copernicus Marine S
 The `.env` file should look like this:
 
 ```sh
-$ cd ./src
+$ cd ./streamlit
 $ cat .env
 CMEMS_USER=you@yourdomain.com
 CMEMS_PASS=password
@@ -28,14 +28,14 @@ CMEMS_PASS=password
 You can run the dashboard with
 
 ```sh
-$ cd ./src
+$ cd ./streamlit
 $ streamlit run app/main.py
 ```
 
 If you don't want the browser to pop up, do this instead
 
 ```sh
-$ cd ./src
+$ cd ./streamlit
 $ streamlit run app/main.py --server.headless true
 ```
 
