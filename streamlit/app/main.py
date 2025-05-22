@@ -28,7 +28,7 @@ def _load_locations():
     # gdf_aoi = gpd.read_file(fname)
     # # return gdf_aoi.head(1).geometry.bounds
     # return gdf_aoi.head(1).geometry.bounds.values.tolist()[0]
-    gdf_aoi = gpd.read_file("galicia_mussel_farms.geojson")
+    gdf_aoi = gpd.read_file("app/galicia_mussel_farms.geojson")
     gdf_aoi["centroid"] = gdf_aoi.geometry.to_crs(epsg=25830).centroid.to_crs(epsg=4326)
     return gdf_aoi
 
