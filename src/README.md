@@ -9,7 +9,7 @@
 ```sh
 $ mamba create --name climarest python=3.11
 $ mamba activate climarest
-$ mamba install streamlit xarray matplotlib plotly numpy pandas cartopy cmocean python-dotenv shapely
+$ mamba install streamlit xarray matplotlib plotly numpy pandas cartopy cmocean python-dotenv shapely copernicusmarine
 ```
 
 You also need `.env` file with your API credentials for the [Copernicus Marine Service](https://marine.copernicus.eu). If you do not have any credentials, you need to register on the site.
