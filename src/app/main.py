@@ -160,13 +160,15 @@ selected_time = st.sidebar.slider(
 
 # Sidebar or within col1
 st.sidebar.header("🗺️ Map Settings")
-map_variable = st.sidebar.radio("Select Variable for Map", ["Temperature", "Sea Level"])
+map_variable = st.sidebar.radio(
+    "Select Variable for Map", ["Temperature", "Sea Surface Above Geoid"]
+)
 
 
 # ---------- User Thresholds ----------
 st.sidebar.header("🚨 Alarm Thresholds")
 temp_thresh = st.sidebar.slider("Temperature Threshold (°C)", 0.0, 20.0, 12.0)
-sea_thresh = st.sidebar.slider("Sea Level Threshold (m)", 0.0, 2.0, 1.0)
+sea_thresh = st.sidebar.slider("Sea Surface Above Geoid Threshold (m)", 0.0, 2.0, 1.0)
 
 # # ---------- Select Locations ----------
 # locations = {
@@ -187,10 +189,12 @@ for i, (site_name, df) in enumerate(frames.items()):
 
     if (ts_temp > temp_thresh).any():
         alarm_triggered = True
-        alarm_messages.append(f"🚨 {site_name}: Temperature threshold exceeded")
+        alarm_messages.append(f"🚨 {site_name}: Temperature Threshold Exceeded")
     if (ts_sea > sea_thresh).any():
         alarm_triggered = True
-        alarm_messages.append(f"🌊 {site_name}: Sea level threshold exceeded")
+        alarm_messages.append(
+            f"🌊 {site_name}: Sea Surface (Above Geoid) Threshold Exceeded"
+        )
 
 # ---------- Display Alarm Widget ----------
 st.subheader("🔔 Alarm Status")
@@ -216,7 +220,7 @@ with col1:
         cmap = "inferno"
     else:
         var_data = dset.zos.sel(time=selected_time, method="nearest")
-        var_label = "Sea Level (m)"
+        var_label = "Sea Surface Above Geoid (m)"
         cmap = "viridis"
 
     # Choose the projection
@@ -277,7 +281,12 @@ with col2:
         axs[i].plot(
             ts_temp.index, ts_temp.values, label="Temperature (°C)", color="red"
         )
-        axs[i].plot(ts_sea.index, ts_sea.values, label="Sea Level (m)", color="blue")
+        axs[i].plot(
+            ts_sea.index,
+            ts_sea.values,
+            label="Sea Surfac Above Geoid (m)",
+            color="blue",
+        )
         axs[i].set_title(f"{site_name}")
         axs[i].legend(loc="upper right")
         axs[i].grid(True)
