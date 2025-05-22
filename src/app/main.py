@@ -1,47 +1,161 @@
+import datetime
+import os
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import copernicusmarine
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import shapely
 import streamlit as st
 import xarray as xr
+from dotenv import load_dotenv
+
+########################################################################
+########################################################################
+########################################################################
+# FUNCTIONS
+########################################################################
+########################################################################
+########################################################################
+
+
+def _load_locations():
+    # fname = "../data/galicia_mussel_farms.geojson"
+    # gdf_aoi = gpd.read_file(fname)
+    # # return gdf_aoi.head(1).geometry.bounds
+    # return gdf_aoi.head(1).geometry.bounds.values.tolist()[0]
+    gdf_aoi = gpd.read_file("../data/galicia_mussel_farms.geojson")
+    gdf_aoi["centroid"] = gdf_aoi.geometry.to_crs(epsg=25830).centroid.to_crs(epsg=4326)
+    return gdf_aoi
+
+
+@st.cache_data
+def _load_and_average_ocean_data_for_location(bounds, tlo, thi):
+    xlo, ylo, xhi, yhi = bounds
+    data_request = {
+        "dataset_id": "cmems_mod_ibi_phy_anfc_0.027deg-2D_PT1H-m",
+        "longitude": [xlo, xhi],
+        "latitude": [ylo, yhi],
+        "time": [tlo, thi],
+        "variables": ["thetao", "zos"],
+    }
+    dset = copernicusmarine.open_dataset(
+        dataset_id=data_request["dataset_id"],
+        minimum_longitude=data_request["longitude"][0],
+        maximum_longitude=data_request["longitude"][1],
+        minimum_latitude=data_request["latitude"][0],
+        maximum_latitude=data_request["latitude"][1],
+        start_datetime=data_request["time"][0],
+        end_datetime=data_request["time"][1],
+        variables=data_request["variables"],
+    )
+    df = dset.to_dataframe()
+    df = df.groupby("time").agg(
+        {
+            "thetao": "mean",
+            "zos": "mean",
+        }
+    )
+    return df
+
+
+@st.cache_data
+def _load_and_average_ocean_data_for_all_locations(_locations, tlo, thi):
+    frames = {}
+    for row in locations.itertuples():
+        frames[row.name] = _load_and_average_ocean_data_for_location(
+            shapely.bounds(row.geometry),
+            tlo,
+            thi,
+        )
+    return frames
+
+
+def _load_ocean_data_for_map(bounds, tlo, thi):
+    xlo, ylo, xhi, yhi = bounds
+    data_request = {
+        "dataset_id": "cmems_mod_ibi_phy_anfc_0.027deg-2D_PT1H-m",
+        "longitude": [xlo, xhi],
+        "latitude": [ylo, yhi],
+        "time": [tlo, thi],
+        "variables": ["thetao", "zos"],
+    }
+    dset = copernicusmarine.open_dataset(
+        dataset_id=data_request["dataset_id"],
+        minimum_longitude=data_request["longitude"][0],
+        maximum_longitude=data_request["longitude"][1],
+        minimum_latitude=data_request["latitude"][0],
+        maximum_latitude=data_request["latitude"][1],
+        start_datetime=data_request["time"][0],
+        end_datetime=data_request["time"][1],
+        variables=data_request["variables"],
+    )
+    return dset
+
+
+########################################################################
+########################################################################
+# STREAMLIT INIT
+########################################################################
+########################################################################
 
 # ---------- Configuration ----------
 st.set_page_config(layout="wide")
 st.title("🌊 Climate Monitoring Dashboard")
 
+########################################################################
+########################################################################
+# LOGIC INIT
+########################################################################
+########################################################################
 
-# ---------- Load Dataset ----------
-@st.cache_data
-def load_data():
-    # For prototyping: simulate a dataset
-    times = pd.date_range("2023-01-01", periods=100, freq="D")
-    lats = [58.0, 59.0, 60.0, 61.0]
-    lons = [5.0, 6.0, 7.0, 8.0]
-    temperature = np.random.rand(len(times), len(lats), len(lons)) * 10 + 5
-    sea_level = np.random.rand(len(times), len(lats), len(lons)) * 0.5 + 0.5
+load_dotenv()
+CMEMS_USER = os.getenv("CMEMS_USER")
+CMEMS_PASS = os.getenv("CMEMS_PASS")
+if copernicusmarine.login(
+    username=CMEMS_USER, password=CMEMS_PASS, force_overwrite=True
+):
+    st.toast("CMEMS Login Successfull")
+else:
+    st.error("CMEMS Login Failed ")
 
-    ds = xr.Dataset(
-        {
-            "temperature": (["time", "lat", "lon"], temperature),
-            "sea_level": (["time", "lat", "lon"], sea_level),
-        },
-        coords={"time": times, "lat": lats, "lon": lons},
-    )
-    return ds
+# Site Locations
+locations = _load_locations()
 
+# Timestamps of Interest
+now = datetime.datetime.now()
+tlo = datetime.datetime(now.year, now.month, now.day, now.hour)
+thi = (tlo + datetime.timedelta(hours=24)).isoformat()
+tlo = tlo.isoformat()
 
-ds = load_data()
+# Map Boundaries
+map_bounds = [-9.5, 42.0, -8.5, 43.0]
+
+# Load Ocean Data for Sites
+frames = _load_and_average_ocean_data_for_all_locations(locations, tlo, thi)
+
+# Load Ocean Data for Map
+dset = _load_ocean_data_for_map(map_bounds, tlo, thi)
+
+########################################################################
+########################################################################
+# STREAMLIT STUFF
+########################################################################
+########################################################################
 
 # ---------- Time Selection ----------
 st.sidebar.header("🕒 Time Control")
-time_options = pd.to_datetime(ds.time.values).to_pydatetime()
+time_options = pd.date_range(tlo, thi, freq="h").to_pydatetime()
 selected_time = st.sidebar.slider(
     "Select Time",
     min_value=time_options[0],
     max_value=time_options[-1],
+    step=datetime.timedelta(hours=1),
     value=time_options[0],
-    format="YYYY-MM-DD",
+    format="ddd HH:mm",
 )
 
 # Sidebar or within col1
@@ -54,28 +168,29 @@ st.sidebar.header("🚨 Alarm Thresholds")
 temp_thresh = st.sidebar.slider("Temperature Threshold (°C)", 0.0, 20.0, 12.0)
 sea_thresh = st.sidebar.slider("Sea Level Threshold (m)", 0.0, 2.0, 1.0)
 
-# ---------- Select Locations ----------
-locations = {
-    "Ría de Arousa": (-8.85, 42.61002),
-    "Ría de Vigo": (-8.73, 42.26002),
-    "Ría de Pontevedra": (-8.78, 42.39001),
-    "Ría de Muros e Noia": (-8.96501, 42.79503),
-}
+# # ---------- Select Locations ----------
+# locations = {
+#     "Ría de Arousa": (-8.85, 42.61002),
+#     "Ría de Vigo": (-8.73, 42.26002),
+#     "Ría de Pontevedra": (-8.78, 42.39001),
+#     "Ría de Muros e Noia": (-8.96501, 42.79503),
+# }
 
 # ---------- Alarm Evaluation ----------
 alarm_triggered = False
 alarm_messages = []
 
-for site, (lat, lon) in locations.items():
-    ts_temp = ds.temperature.sel(lat=lat, lon=lon, method="nearest").to_series()
-    ts_sea = ds.sea_level.sel(lat=lat, lon=lon, method="nearest").to_series()
+# for site, (lat, lon) in locations.items():
+for i, (site_name, df) in enumerate(frames.items()):
+    ts_temp = df.thetao
+    ts_sea = df.zos
 
     if (ts_temp > temp_thresh).any():
         alarm_triggered = True
-        alarm_messages.append(f"🚨 {site}: Temperature threshold exceeded")
+        alarm_messages.append(f"🚨 {site_name}: Temperature threshold exceeded")
     if (ts_sea > sea_thresh).any():
         alarm_triggered = True
-        alarm_messages.append(f"🌊 {site}: Sea level threshold exceeded")
+        alarm_messages.append(f"🌊 {site_name}: Sea level threshold exceeded")
 
 # ---------- Display Alarm Widget ----------
 st.subheader("🔔 Alarm Status")
@@ -96,11 +211,11 @@ with col1:
 
     # Select variable
     if map_variable == "Temperature":
-        var_data = ds.temperature.sel(time=selected_time, method="nearest")
+        var_data = dset.thetao.sel(time=selected_time, method="nearest")
         var_label = "Temperature (°C)"
         cmap = "inferno"
     else:
-        var_data = ds.sea_level.sel(time=selected_time, method="nearest")
+        var_data = dset.zos.sel(time=selected_time, method="nearest")
         var_label = "Sea Level (m)"
         cmap = "viridis"
 
@@ -118,27 +233,37 @@ with col1:
     ax.gridlines(draw_labels=True)
 
     # Plot actual data
-    mesh = ax.pcolormesh(ds.lon, ds.lat, var_data.values, cmap=cmap, shading="auto")
+    mesh = ax.pcolormesh(
+        dset.longitude, dset.latitude, var_data.values, cmap=cmap, shading="auto"
+    )
     cbar = plt.colorbar(mesh, ax=ax, label=var_label)
 
     # Add site locations
-    for _, site in locations.items():
-        # print(row.centroid)
+    for row in locations.itertuples():
         ax.plot(
-            site[0],
-            site[1],
+            row.centroid.x,
+            row.centroid.y,
             marker="*",
             color="black",
             markersize=4**2,
             transform=ccrs.PlateCarree(),
         )
-        # ax.text(loc["lon"] + 0.5, loc["lat"] + 0.5, loc["name"],
-        #         transform=ccrs.PlateCarree(), fontsize=9, color='black')
+        ax.text(
+            row.centroid.x + 0.04,
+            row.centroid.y + 0.04,
+            row.name,
+            transform=ccrs.PlateCarree(),
+            fontsize=9,
+            color="black",
+            bbox=dict(facecolor="orange", alpha=0.9),
+        )
 
     ax.set_title(f"{var_label} at {selected_time.date()}")
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-    ax.set_aspect("auto")
+    # # ax.set_xlabel("Longitude")
+    # # ax.set_ylabel("Latitude")
+    # # ax.set_aspect("auto")
+    ax.set_xlim([map_bounds[0], map_bounds[2]])
+    ax.set_ylim([map_bounds[1], map_bounds[3]])
     st.pyplot(fig)
 
 
@@ -146,16 +271,14 @@ with col1:
 with col2:
     st.subheader("📈 Time Series for Key Locations")
     fig_ts, axs = plt.subplots(4, 1, figsize=(10, 12), sharex=True)
-
-    for i, (site, (lat, lon)) in enumerate(locations.items()):
-        ts_temp = ds.temperature.sel(lat=lat, lon=lon, method="nearest").to_series()
-        ts_sea = ds.sea_level.sel(lat=lat, lon=lon, method="nearest").to_series()
-
+    for i, (site_name, df) in enumerate(frames.items()):
+        ts_temp = df.thetao
+        ts_sea = df.zos
         axs[i].plot(
             ts_temp.index, ts_temp.values, label="Temperature (°C)", color="red"
         )
         axs[i].plot(ts_sea.index, ts_sea.values, label="Sea Level (m)", color="blue")
-        axs[i].set_title(f"{site}")
+        axs[i].set_title(f"{site_name}")
         axs[i].legend(loc="upper right")
         axs[i].grid(True)
 
