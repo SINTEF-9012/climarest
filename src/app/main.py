@@ -207,7 +207,7 @@ col1, col2 = st.columns([1, 1])
 
 # ---------- Map View (col1) ----------
 with col1:
-    st.subheader(f"🗺️ Map Overview ({selected_time.date()})")
+    st.subheader(f"🗺️ Map Overview ({selected_time.strftime('%a, %d %B, %H:%M')})")
 
     # Select variable
     if map_variable == "Temperature":
@@ -258,7 +258,7 @@ with col1:
             bbox=dict(facecolor="orange", alpha=0.9),
         )
 
-    ax.set_title(f"{var_label} at {selected_time.date()}")
+    ax.set_title(f"{var_label} at {selected_time.strftime('%a, %d %B, %H:%M')}")
     # # ax.set_xlabel("Longitude")
     # # ax.set_ylabel("Latitude")
     # # ax.set_aspect("auto")
