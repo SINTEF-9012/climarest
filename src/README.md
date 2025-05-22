@@ -12,6 +12,17 @@ $ mamba activate climarest
 $ mamba install streamlit xarray matplotlib plotly numpy pandas cartopy cmocean python-dotenv shapely
 ```
 
+You also need `.env` file with your API credentials for the [Copernicus Marine Service](https://marine.copernicus.eu). If you do not have any credentials, you need to register on the site.
+
+The `.env` file should look like this:
+
+```sh
+$ cd ./src
+$ cat .env
+CMEMS_USER=you@yourdomain.com
+CMEMS_PASS=password
+```
+
 ## Development
 
 You can run the dashboard with
