@@ -167,8 +167,16 @@ map_variable = st.sidebar.radio(
 
 # ---------- User Thresholds ----------
 st.sidebar.header("🚨 Alarm Thresholds")
-temp_thresh = st.sidebar.slider("Temperature Threshold (°C)", 0.0, 20.0, 12.0)
-sea_thresh = st.sidebar.slider("Sea Surface Above Geoid Threshold (m)", 0.0, 2.0, 1.0)
+temp_thresh = st.sidebar.slider(
+    "Temperature Threshold (°C)", min_value=0, max_value=25, value=15, step=1
+)
+sea_thresh = st.sidebar.slider(
+    "Sea Surface Above Geoid Threshold (m)",
+    min_value=0.0,
+    max_value=2.0,
+    value=1.0,
+    step=0.1,
+)
 
 # # ---------- Select Locations ----------
 # locations = {
